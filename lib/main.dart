@@ -1,9 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:jetkiz_courier_app/core/services/courier_tracking_service.dart';
 import 'package:jetkiz_courier_app/features/auth/presentation/login_page.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Tracking self-disables when there is no authenticated courier session.
+  // Do not block first paint on GPS/network initialization.
+  unawaited(CourierTrackingService.instance.start());
+
   runApp(const MyApp());
 }
 
