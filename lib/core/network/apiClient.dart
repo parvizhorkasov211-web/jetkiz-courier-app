@@ -12,18 +12,17 @@ class ApiClient {
   })  : _client = client ?? http.Client(),
         _tokenStorage = tokenStorage ?? TokenStorage();
 
-  static const String baseUrl = 'http://192.168.0.16:3000';
+  static const String baseUrl = String.fromEnvironment(
+    'JETKIZ_API_BASE_URL',
+    defaultValue: 'https://api.jetkiz.asia',
+  );
   static const Duration _timeout = Duration(seconds: 15);
 
   final http.Client _client;
   final TokenStorage _tokenStorage;
 
   Future<dynamic> get(String path) async {
-    final response = await _send(
-      method: 'GET',
-      path: path,
-    );
-
+    final response = await _send(method: 'GET', path: path);
     return _handleResponse(response);
   }
 
@@ -31,12 +30,7 @@ class ApiClient {
     String path, [
     Map<String, dynamic>? body,
   ]) async {
-    final response = await _send(
-      method: 'POST',
-      path: path,
-      body: body,
-    );
-
+    final response = await _send(method: 'POST', path: path, body: body);
     return _handleResponse(response);
   }
 
@@ -44,12 +38,19 @@ class ApiClient {
     String path, [
     Map<String, dynamic>? body,
   ]) async {
-    final response = await _send(
-      method: 'PATCH',
-      path: path,
-      body: body,
-    );
+    // Transitional compatibility for the existing home screen. Presence is now
+    // owned by the canonical tracking endpoint and must never use the legacy
+    // PATCH /couriers/me/online flow.
+    if (path == '/couriers/me/online') {
+      final response = await _send(
+        method: 'POST',
+        path: '/couriers/me/online-status',
+        body: body,
+      );
+      return _handleResponse(response);
+    }
 
+    final response = await _send(method: 'PATCH', path: path, body: body);
     return _handleResponse(response);
   }
 
@@ -57,12 +58,7 @@ class ApiClient {
     String path, [
     Map<String, dynamic>? body,
   ]) async {
-    final response = await _send(
-      method: 'DELETE',
-      path: path,
-      body: body,
-    );
-
+    final response = await _send(method: 'DELETE', path: path, body: body);
     return _handleResponse(response);
   }
 
@@ -87,11 +83,8 @@ class ApiClient {
     try {
       switch (method) {
         case 'GET':
-          response = await _client
-              .get(uri, headers: headers)
-              .timeout(_timeout);
+          response = await _client.get(uri, headers: headers).timeout(_timeout);
           break;
-
         case 'POST':
           response = await _client
               .post(
@@ -101,7 +94,6 @@ class ApiClient {
               )
               .timeout(_timeout);
           break;
-
         case 'PATCH':
           response = await _client
               .patch(
@@ -111,7 +103,6 @@ class ApiClient {
               )
               .timeout(_timeout);
           break;
-
         case 'DELETE':
           response = await _client
               .delete(
@@ -121,7 +112,6 @@ class ApiClient {
               )
               .timeout(_timeout);
           break;
-
         default:
           throw Exception('Unsupported method: $method');
       }
@@ -168,9 +158,7 @@ class ApiClient {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
             },
-            body: jsonEncode({
-              'refreshToken': refreshToken,
-            }),
+            body: jsonEncode({'refreshToken': refreshToken}),
           )
           .timeout(_timeout);
 
@@ -179,24 +167,16 @@ class ApiClient {
       }
 
       final decoded = jsonDecode(response.body);
-
-      if (decoded is! Map<String, dynamic>) {
-        return false;
-      }
+      if (decoded is! Map<String, dynamic>) return false;
 
       final newAccessToken = decoded['accessToken']?.toString();
-      final newRefreshToken =
-          decoded['refreshToken']?.toString() ?? refreshToken;
+      final newRefreshToken = decoded['refreshToken']?.toString() ?? refreshToken;
 
       if (newAccessToken == null || newAccessToken.isEmpty) {
         return false;
       }
 
-      await _tokenStorage.saveTokens(
-        newAccessToken,
-        newRefreshToken,
-      );
-
+      await _tokenStorage.saveTokens(newAccessToken, newRefreshToken);
       return true;
     } catch (_) {
       return false;
@@ -213,9 +193,7 @@ class ApiClient {
       );
     }
 
-    if (bodyText.isEmpty) {
-      return null;
-    }
+    if (bodyText.isEmpty) return null;
 
     try {
       return jsonDecode(bodyText);
