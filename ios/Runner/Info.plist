@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Jetkiz Courier App</string>
+	<string>JETKIZ Курьер</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -24,6 +24,18 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>JETKIZ использует геопозицию, чтобы назначать заказы и показывать диспетчеру текущее местоположение курьера на линии.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Во время активной доставки JETKIZ продолжает использовать геопозицию в фоне, чтобы диспетчер видел движение курьера и заказ не терял отслеживание.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Во время активной доставки JETKIZ продолжает использовать геопозицию в фоне для безопасного и непрерывного отслеживания заказа.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
+
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
